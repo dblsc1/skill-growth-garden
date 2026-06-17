@@ -1,0 +1,15 @@
+# Godot
+godot/.godot/
+godot/export/
+*.import
+
+# Backend
+backend/__pycache__/
+backend/.env
+backend/venv/
+backend/*.pyc
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
