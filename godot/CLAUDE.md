@@ -1,6 +1,5 @@
 # Growth Garden — Frontend CLAUDE.md
 # (place at: growth-garden/godot/CLAUDE.md)
-# Also valid as AGENTS.md for Codex
 
 ## What This Package Is
 
@@ -10,8 +9,8 @@ Mobile web first (375px phone viewport). Player walks in a forest that grows fro
 ## What You Can See (in this sandbox)
 
 ```
-/work/godot/       ← your workspace (read + write)
-/work/contracts/   ← API contracts (READ ONLY — never edit these)
+/workspace/godot/       ← your workspace (read + write)
+/workspace/contracts/   ← API contracts (READ ONLY — never edit these)
 ```
 
 **You cannot see backend/ — that is the backend agent's workspace.**  
@@ -65,7 +64,7 @@ godot/
 
 ## API Contract (what backend gives you)
 
-Read `/work/contracts/openapi.json` and `/work/contracts/api_types.ts` for full types.  
+Read `/workspace/contracts/openapi.json` and `/workspace/contracts/api_types.ts` for full types.  
 Endpoints you call:
 ```
 POST /api/v1/auth/register
@@ -140,43 +139,32 @@ gdtoolkit --check godot/scripts/   # lint GDScript (runs in container via make)
 make check-frontend                 # lint only (export happens in CI)
 ```
 
-## Your Role Is Not Fixed
+## Your Role
 
-The arbitrator assigns roles per task. This session you may be the **worker** (you write code)
-or the **reviewer** (read-only — inspect and report, cannot modify). The launch script told
-you which. Codex and Claude Code are interchangeable for either role.
+You are **the frontend agent** (Claude, via claude-agent-sdk inside this container). There is no
+Codex and no separate reviewer — code review is done by the arbitrator. Just follow the task it
+sends you over `/task` (it may ask you to build, self-review, or fix a bug it found).
 
 ## AI Work-Trail (REQUIRED — for humans, git-committed)
 
-If you are the **worker**, before writing your status file, write a devlog entry:
-`docs/devlog/YYYY-MM-DD-<slug>.md` covering **What / Why / Decisions / Contract impact / Tests**.
-Emphasis on **Why**. The arbitrator commits it with your code. See
-`vibecoding/05-AI工作留痕-文档管理.md`. Do NOT push (only the arbitrator pushes).
+Maintain your own docs under `/workspace/godot/docs/`:
+- `dev-log.md` — append **What / Why / Decisions / Contract impact / Tests** per task (emphasis on **Why**).
+- `structure.md` — keep a short map of scenes/scripts and their responsibilities up to date.
+- `self-constraints.md` — record how you kept scenes/scripts small, signal-decoupled, multi-file.
 
-## When You Finish (REQUIRED)
+`audit.log` is written automatically by the runner. Global `/workspace/docs/` is READ-ONLY; only write
+inside `/workspace/godot/docs/`. See `/workspace/docs/architecture/05-*`. Do NOT push or commit.
 
-Write this file before exiting so the pipeline knows you're done:
+## When You Finish
 
-**Worker** (`/work/godot/.agent_status.json`):
-```json
-{
-  "status": "done",
-  "summary": "implemented X scene, wired signals, contracts unchanged",
-  "contracts_changed": false
-}
-```
+**No status files.** The runner returns your final reply to the arbitrator over HTTP as the report.
+Before you finish:
+1. `make check-frontend` passes (lint).
+2. You updated `docs/dev-log.md` and `docs/structure.md`.
+3. End with a one-paragraph summary: what you delivered, whether contracts changed, what's untested.
 
-**Reviewer** (`/work/review_output/frontend.json`):
-```json
-{
-  "status": "approved",
-  "issues": [],
-  "summary": "GDScript structure correct, API calls match contracts"
-}
-```
-
-If you are the **reviewer**: godot/ is read-only. You CANNOT write there.  
-Write ONLY to `/work/review_output/frontend.json`.
+Anything outside your sandbox (contracts/, git, reading backend/) is blocked — ask the arbitrator in
+your reply; sensitive tool calls are intercepted and routed to it for approval.
 
 ## Forbidden
 

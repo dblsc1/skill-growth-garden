@@ -9,8 +9,8 @@ Runs on Alibaba Cloud ECS (Ubuntu, 2C2G). MongoDB self-hosted on same ECS.
 ## What You Can See (in this sandbox)
 
 ```
-/work/backend/     ← your workspace (read + write)
-/work/contracts/   ← API contracts (READ ONLY — never edit these directly)
+/workspace/backend/     ← your workspace (read + write)
+/workspace/contracts/   ← API contracts (READ ONLY — never edit these directly)
 ```
 
 **You cannot see godot/ — that is the frontend agent's workspace.**  
@@ -54,7 +54,7 @@ backend/
 
 ## API Contracts (authoritative)
 
-Read `/work/contracts/openapi.json` for the ground truth on all request/response shapes.  
+Read `/workspace/contracts/openapi.json` for the ground truth on all request/response shapes.  
 The 6 endpoints you implement:
 ```
 POST /api/v1/auth/register
@@ -73,7 +73,7 @@ If you need to change a response shape → update the Pydantic model → run `ma
 users, zones, growth_items, growth_events, ai_usage
 ```
 
-Schema: read `/work/contracts/db_schema.md` (synced from tech_layer/DB_Schema.md).  
+Schema: read `/workspace/contracts/db_schema.md` (synced from tech_layer/DB_Schema.md).  
 `count` is never stored — always aggregated from growth_events.
 
 ## Key Constraints
@@ -87,7 +87,7 @@ Schema: read `/work/contracts/db_schema.md` (synced from tech_layer/DB_Schema.md
 ## Run & Check
 
 ```bash
-cd /work/backend
+cd /workspace/backend
 uv sync                      # install deps
 uv run uvicorn main:app --reload   # dev server
 uv run pytest tests/         # run tests
@@ -96,43 +96,33 @@ uv run ruff format .         # format
 make check                   # lint + type check + tests (run before finishing)
 ```
 
-## Your Role Is Not Fixed
+## Your Role
 
-The arbitrator assigns roles per task. This session you may be the **worker** (you write code)
-or the **reviewer** (read-only — you inspect and report, you cannot modify). The launch script
-told you which. Codex and Claude Code are interchangeable for either role — don't assume.
+You are **the backend agent** (Claude, via claude-agent-sdk inside this container). There is no
+Codex and no separate reviewer — code review is done by the arbitrator. The arbitrator may ask
+you to self-review or to fix bugs it found; just follow the task it sends you over `/task`.
 
 ## AI Work-Trail (REQUIRED — for humans, git-committed)
 
-If you are the **worker**, before writing your status file, write a devlog entry:
-`docs/devlog/YYYY-MM-DD-<slug>.md` covering **What / Why / Decisions / Contract impact / Tests**.
-The arbitrator commits it alongside your code. Emphasis on **Why** — code shows what, devlog
-shows why. See `vibecoding/05-AI工作留痕-文档管理.md`. Do NOT push (only the arbitrator pushes).
+Maintain your own docs under `/workspace/backend/docs/`:
+- `dev-log.md` — append **What / Why / Decisions / Contract impact / Tests** per task (emphasis on **Why**).
+- `structure.md` — keep a short map of backend/ files and their responsibilities up to date.
+- `self-constraints.md` — record how you kept files small, low-coupling, multi-file (the arbitrator checks this).
 
-## When You Finish (REQUIRED)
+`audit.log` is written automatically by the runner — don't touch it. The global `/workspace/docs/`
+is READ-ONLY; only write inside `/workspace/backend/docs/`. See `/workspace/docs/architecture/05-*`.
+Do NOT push or commit — only the arbitrator does.
 
-Write this file before exiting so the pipeline knows you're done:
+## When You Finish
 
-**Worker** (`/work/backend/.agent_status.json`):
-```json
-{
-  "status": "done",
-  "summary": "implemented X, added tests, contracts unchanged",
-  "contracts_changed": false
-}
-```
+**No status files.** The runner automatically returns your final reply to the arbitrator over HTTP
+as the task report. Before you finish:
+1. `make check` is green (lint + types + tests).
+2. You updated `docs/dev-log.md` and `docs/structure.md`.
+3. End with a one-paragraph summary: what you delivered, whether contracts changed, what's untested.
 
-**Reviewer** (`/work/review_output/backend.json`):
-```json
-{
-  "status": "approved",
-  "issues": [],
-  "summary": "code looks correct, matches API contract"
-}
-```
-
-If you are the **reviewer**: you are in a read-only Docker mount. You CANNOT write to backend/.  
-Write ONLY to `/work/review_output/backend.json`. This is your only output channel.
+If you need something outside your sandbox (touch contracts/, git, read another package), you can't —
+ask the arbitrator in your reply; sensitive tool calls are intercepted and routed to it for approval.
 
 ## Forbidden
 

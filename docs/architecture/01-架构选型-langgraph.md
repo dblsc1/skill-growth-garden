@@ -1,5 +1,8 @@
 # 架构选型:LangGraph 作为多 agent 开发骨架
 
+> ⚠️ **本篇含已过时内容**（Anthropic API、Codex/热备份、solo/review/compete、状态文件轮询）。
+> 现行设计见 [README.md 顶部"现行设计修正"](README.md)，以那里为准。
+
 ## LangGraph 的地基:State + Node + Edge
 
 LangGraph 本质是个**状态机**:

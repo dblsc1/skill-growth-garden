@@ -4,6 +4,34 @@
 
 **项目栈**: Godot 4 (GDScript) + Python FastAPI + MongoDB + LangGraph 仲裁者
 
+---
+
+## ⚠️ 现行设计修正（v0.0.1，本节优先于下文与 01–05 的旧描述）
+
+下面 01–05 各篇写于更早的"重型设计"，其中 6 处已被替换。**以本节为准**：
+
+1. **不用 Anthropic API key**。全部 agent（含裁决者）走 **Claude Pro 订阅 + `claude-agent-sdk`**（不是 `anthropic` 包）。代码 `pop ANTHROPIC_API_KEY`，靠挂载 `~/.claude/.credentials.json` 走订阅。
+2. **四个 agent 全是 Claude**：backend / frontend / 单个 tester / arbitrator。**取消** Codex、双 agent 热备份、`solo/review/compete` 三模式、独立 reviewer（审代码归裁决者）。
+3. **SDK 跑在每个 Docker 容器【内部】**（`agent-runner/runner.py`），不是宿主机跑 SDK / docker exec。容器只挂自己目录 + `contracts`(ro) + `docs`(ro)。
+4. **完成信号是 HTTP 同步**：裁决者 POST 容器 `/task` → 等返回 report。**取消**状态文件协议（`.agent_status.json` 等）与 LangGraph 轮询。
+5. **裁决者扩权**：除只读审代码 / 联调 / 唯一 push，还是**前后端唯一通信中转** + **敏感操作(git/跨目录)审批闸**；**改 contracts 大改必须升级给人类(你)批**（man-in-the-loop）。
+6. **留痕**：容器内 `PreToolUse` hook 写各 agent 自己的 `docs/audit.log`；各 agent 维护自己目录下 `docs/`（dev-log.md + structure.md + self-constraints.md：禁超大文件、低耦合高内聚、多文件分散，裁决者审查时查）。
+
+**现行角色全景：**
+```
+你 ── 只跟裁决者对话；批 contract 大改 ──> 裁决者(宿主机 LangGraph + 审批端点:8900)
+        │ 派任务 / 审批闸 / 唯一 push / 前后端唯一中转
+   ┌────┴─────────────┬──────────────────┐
+ backend容器        frontend容器          tester容器
+ SDK在容器内         SDK在容器内            SDK在容器内
+ backend/ rw         godot/ rw            tests/ rw
+ contracts,docs ro   contracts,docs ro    contracts,docs ro
+ ✗看不到 godot/tests ✗看不到 backend/tests ✗看不到任何源码
+```
+落地文件：`agent-runner/{runner,gate,audit}.py`、`docker/Dockerfile.agent`、`docker/docker-compose.agents.yml`。
+
+---
+
 ## 文件索引
 
 | 文件 | 内容 |
