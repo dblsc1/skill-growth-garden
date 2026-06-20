@@ -60,6 +60,9 @@ services:
 
   tester:
     <<: *agent-base
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.tester      # 只有 tester 带 Playwright/chromium
     ports: ["8083:8080"]
     environment:
       AGENT_NAME: tester

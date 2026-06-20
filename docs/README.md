@@ -13,8 +13,8 @@
 │   ├── backend/         # API 黑盒集成测试（后端 test 工程师）
 │   └── frontend/        # Playwright E2E（前端 test 工程师）
 ├── .github/workflows/   # ci-backend.yml + ci-frontend.yml
-├── orchestrator/        # LangGraph 仲裁者（graph.py）
-├── docker/              # 各角色沙箱镜像 + 启动脚本 + compose
+├── orchestrator/        # 宿主机裁决者（LangGraph，建设中）
+├── docker/              # agent 沙箱镜像 + compose（容器内跑 agent-runner）
 └── docs/
     ├── PIPELINE_LOG.md  # 仲裁者调度审计
     ├── devlog/          # 每任务一篇决策记录
@@ -22,16 +22,17 @@
     └── architecture/    # vibecoding 架构笔记
 ```
 
-## 开发流（vibe coding）
+## 开发流（多 agent 容器编排）
 
 ```bash
-make build-images                    # 一次：构建三个 agent 镜像
-cd orchestrator && python graph.py "实现 /diary/extract 端点"
-# 仲裁者灵活分配 worker/reviewer/test，独占起服务+联调+push
-# 你只在 escalate 时介入
+make build-images                                       # 构建 backend/frontend/tester 容器
+docker compose -f docker/docker-compose.agents.yml up -d   # 拉起三个 agent 容器
+# 宿主机裁决者（orchestrator/，建设中）发任务给容器、审批敏感操作、路由前后端、
+# 联测通过后跑 GitHub Actions 云端 CI，绿了才 push 到 feature/*。
+# 改 contract 这类大改 → 裁决者写建议书，你（人）批准后才动。
 ```
 
-细节见 `docs/architecture/README.md` 与各包的 `CLAUDE.md`。
+细节见 `docs/architecture/README.md` 顶部「现行设计修正」与各包的 `CLAUDE.md`。
 
 ## 分支规范
 

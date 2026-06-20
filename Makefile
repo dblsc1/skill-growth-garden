@@ -8,7 +8,7 @@ help:
 	@echo "check           run all checks (backend + frontend lint/tests)"
 	@echo "services-up     start dev services (mongo + backend + web) for integration/E2E"
 	@echo "services-down   stop dev services"
-	@echo "build-images    build the three agent Docker images"
+	@echo "build-images    build the agent containers (backend/frontend/tester)"
 
 # Regenerate the contract from the live FastAPI schema, then derive TS types.
 sync-contracts:
@@ -30,7 +30,6 @@ services-up:
 services-down:
 	docker compose -f docker/docker-compose.dev.yml down
 
+# backend/frontend/tester 都由 compose 构建（tester 用 Dockerfile.tester 带 playwright）。
 build-images:
-	docker build -f docker/Dockerfile.backend  -t growth-garden-backend  .
-	docker build -f docker/Dockerfile.frontend -t growth-garden-frontend .
-	docker build -f docker/Dockerfile.test     -t growth-garden-test     .
+	docker compose -f docker/docker-compose.agents.yml build

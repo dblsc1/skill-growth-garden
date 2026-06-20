@@ -12,8 +12,8 @@
 
 ```
 platform/
-├─ AGENTS.md                 # 给 Codex 的总规约
-├─ CLAUDE.md                 # 给 Claude Code 的总规约
+├─ AGENTS.md                 # CLAUDE.md 的副本，供 Codex CLI 备选读取
+├─ CLAUDE.md                 # 给 Claude Code 的总规约（权威版本）
 ├─ README.md                 # 给人:怎么跑起来
 ├─ docs/
 │  ├─ architecture.md        # 一张图 + 模块边界(唯一架构总览)
@@ -49,7 +49,7 @@ FastAPI(Pydantic 模型) ──自动──> /openapi.json ──openapi-typescr
 
 | 文档 | 位置 | 写给谁 | 内容 |
 |---|---|---|---|
-| **CLAUDE.md / AGENTS.md** | 每个 package + 顶层 | AI | 包是干嘛、**边界(能碰/不能碰)**、命名约定、跑测试命令、**禁止事项** |
+| **CLAUDE.md / AGENTS.md** | 每个 package + 顶层 | AI | 包是干嘛、**边界(能碰/不能碰)**、命名约定、跑测试命令、**禁止事项**（AGENTS.md 是 CLAUDE.md 的副本，供 Codex CLI 备选读取）|
 | **architecture.md** | docs/ | 人+AI | 一张图 + 三模块职责和数据流向,1 页 |
 | **ADR** | docs/adr/ | 人+未来 | "为什么这么选",每个重大决策一个 5 行小文件 |
 
