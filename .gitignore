@@ -1,14 +1,31 @@
 # Godot
 godot/.godot/
 godot/export/
+godot/build/
 *.import
 
 # Backend
 backend/__pycache__/
 backend/.env
+backend/.venv/
 backend/venv/
 backend/*.pyc
+backend/uv.lock
 *.log
+
+# Orchestrator / pipeline runtime artifacts (transient, not source)
+.arbitrator.db
+.agent_status.json
+backend/.agent_status.json
+godot/.agent_status.json
+.review_output/
+.test_output/
+orchestrator/__pycache__/
+
+# Test
+.pytest_cache/
+test-results/
+playwright-report/
 
 # OS
 .DS_Store

@@ -1,0 +1,27 @@
+# 通用 worker 镜像：python + node + claude CLI + claude-agent-sdk + runner
+# 三个角色(backend/frontend/tester)共用这一个镜像，靠环境变量区分身份。
+FROM python:3.12-slim
+
+# Node.js（claude CLI 需要 18+）
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        curl git ca-certificates gnupg \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y --no-install-recommends nodejs \
+    && rm -rf /var/lib/apt/lists/*
+
+# Claude Code CLI（容器内的 claude 本体，跑你挂进来的 Pro 登录态）
+RUN npm install -g @anthropic-ai/claude-code
+
+# Python 依赖
+COPY agent-runner/requirements.txt /app/requirements.txt
+RUN pip install --no-cache-dir -r /app/requirements.txt
+
+# runner 代码
+COPY agent-runner/ /app/
+WORKDIR /app
+
+# tester 容器要能起前后端服务来黑盒测，所以镜像里也带 docker/compose? —— 不。
+# tester 通过 compose 网络直接 HTTP 打 backend 服务，不需要自己起服务。
+
+ENV PORT=8080
+CMD ["python", "runner.py"]

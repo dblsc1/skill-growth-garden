@@ -1,0 +1,27 @@
+# Frontend Agent Sandbox
+# Godot 4 GDScript development environment
+# Mounts: godot/ (rw) + contracts/ (ro)
+# Cannot see: backend/ or any other package
+
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y \
+    git make curl wget nodejs npm \
+    python3 python3-pip \
+    && rm -rf /var/lib/apt/lists/*
+
+# Claude Code CLI
+RUN npm install -g @anthropic-ai/claude-code
+
+# GDScript linter (for CI lint step)
+RUN pip3 install gdtoolkit
+
+# Note: Godot editor runs on HOST machine, not in container.
+# This container is for Claude Code to read/write .gd and .tscn files only.
+# Godot headless export runs in CI (GitHub Actions), not here.
+
+WORKDIR /work
+
+CMD ["claude"]

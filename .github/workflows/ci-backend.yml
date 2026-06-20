@@ -1,0 +1,38 @@
+# Backend CI — owned by the backend test engineer.
+# Tier 1 (unit, in backend/tests) + Tier 2 (API integration, in tests/backend).
+# Skeleton: fill steps as the backend takes shape.
+
+name: ci-backend
+
+on:
+  push:
+    paths:
+      - "backend/**"
+      - "tests/backend/**"
+      - "contracts/**"
+  pull_request:
+    paths:
+      - "backend/**"
+      - "tests/backend/**"
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      mongo:
+        image: mongo:7
+        ports: ["27017:27017"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+      - name: Install deps
+        run: cd backend && uv sync
+      - name: Lint
+        run: cd backend && uv run ruff check .
+      - name: Unit tests (Tier 1)
+        run: cd backend && uv run pytest -q
+      # - name: Start API + API integration tests (Tier 2)
+      #   run: |
+      #     cd backend && uv run uvicorn main:app --port 8000 &
+      #     sleep 5
+      #     uv run pytest ../tests/backend -q

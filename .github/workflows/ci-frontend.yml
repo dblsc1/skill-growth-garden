@@ -1,0 +1,31 @@
+# Frontend CI — owned by the frontend test engineer.
+# Tier 1 (GUT unit, in godot/tests) + Tier 2 (Playwright E2E, in tests/frontend).
+# Skeleton: fill steps once the Godot project + web export exist.
+
+name: ci-frontend
+
+on:
+  push:
+    paths:
+      - "godot/**"
+      - "tests/frontend/**"
+  pull_request:
+    paths:
+      - "godot/**"
+      - "tests/frontend/**"
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # - name: GUT unit tests (Tier 1)
+      #   uses: <godot-ci-action>   # run GUT headless
+      # - name: Export HTML5 build
+      #   run: <godot --headless --export-release "Web" godot/build/web/index.html>
+      # - name: Playwright E2E (Tier 2)
+      #   run: |
+      #     pip install pytest-playwright && playwright install --with-deps chromium
+      #     pytest tests/frontend -q
+      - name: Placeholder
+        run: echo "frontend CI skeleton — fill once godot/ has content"

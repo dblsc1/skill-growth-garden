@@ -1,0 +1,80 @@
+# 三个【开发 agent】容器（backend/frontend/tester），共用一个镜像，靠 env 区分身份。
+# 关键隔离：每个容器只挂载自己该看的目录 —— 别人的源码在容器里【根本不存在】。
+#
+# 注意区分两类容器：
+#   - 本文件这些 = "开发 agent"容器，里面跑 runner.py 写代码，不是被测的服务。
+#   - 被测的【运行时服务】(mongo + backend app + web) 由裁决者在联测前用
+#     docker-compose.dev.yml 单独拉起，tester 通过 compose 网络 HTTP 去打。
+#
+# 用法：
+#   docker compose -f docker/docker-compose.agents.yml up -d --build
+#
+# 前置：~/.claude/.credentials.json 必须是已登录 Pro 的凭证（挂只读进容器走订阅）。
+
+x-agent-base: &agent-base
+  build:
+    context: ..                       # 仓库根，好让 Dockerfile COPY agent-runner/
+    dockerfile: docker/Dockerfile.agent
+  restart: "no"
+  networks: [garden]
+  extra_hosts:
+    - "host.docker.internal:host-gateway"   # 让容器内 gate 能回调宿主机审批端点
+  environment:
+    ARBITRATOR_URL: "http://host.docker.internal:8900"   # 宿主机审批端点（下一步建）
+  volumes:
+    - ${HOME}/.claude/.credentials.json:/root/.claude/.credentials.json:ro  # Pro 登录态
+
+services:
+  backend:
+    <<: *agent-base
+    ports: ["8081:8080"]
+    environment:
+      AGENT_NAME: backend
+      AGENT_CWD: /workspace/backend
+      ALLOWED_TOOLS: "Read,Write,Edit,Bash,Glob,Grep"
+      ADD_DIRS: "/workspace/contracts,/workspace/docs"
+      ROLE_BRIEF: "你是后端开发 agent，只准改 backend/。隐私铁律：日记正文永不落库、不进日志。"
+      ARBITRATOR_URL: "http://host.docker.internal:8900"
+    volumes:
+      - ../backend:/workspace/backend:rw          # 只有自己目录可写
+      - ../contracts:/workspace/contracts:ro      # 契约只读
+      - ../docs:/workspace/docs:ro                # 全局文档只读
+      - ${HOME}/.claude/.credentials.json:/root/.claude/.credentials.json:ro
+      # ✗ 没挂 godot/、tests/ —— 后端容器里看不到它们
+
+  frontend:
+    <<: *agent-base
+    ports: ["8082:8080"]
+    environment:
+      AGENT_NAME: frontend
+      AGENT_CWD: /workspace/godot
+      ALLOWED_TOOLS: "Read,Write,Edit,Bash,Glob,Grep"
+      ADD_DIRS: "/workspace/contracts,/workspace/docs"
+      ROLE_BRIEF: "你是前端(Godot)开发 agent，只准改 godot/。"
+      ARBITRATOR_URL: "http://host.docker.internal:8900"
+    volumes:
+      - ../godot:/workspace/godot:rw
+      - ../contracts:/workspace/contracts:ro
+      - ../docs:/workspace/docs:ro
+      - ${HOME}/.claude/.credentials.json:/root/.claude/.credentials.json:ro
+
+  tester:
+    <<: *agent-base
+    ports: ["8083:8080"]
+    environment:
+      AGENT_NAME: tester
+      AGENT_CWD: /workspace/tests
+      ALLOWED_TOOLS: "Read,Write,Edit,Bash,Glob,Grep"
+      ADD_DIRS: "/workspace/contracts,/workspace/docs"
+      ROLE_BRIEF: "你是测试工程师，黑盒联测。严禁读 backend/、godot/ 源码；只按契约打运行中的服务。"
+      ARBITRATOR_URL: "http://host.docker.internal:8900"
+    volumes:
+      - ../tests:/workspace/tests:rw
+      - ../contracts:/workspace/contracts:ro
+      - ../docs:/workspace/docs:ro
+      - ${HOME}/.claude/.credentials.json:/root/.claude/.credentials.json:ro
+      # ✗ 没挂任何源码目录
+
+networks:
+  garden:
+    driver: bridge

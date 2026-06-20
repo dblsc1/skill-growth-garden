@@ -1,0 +1,23 @@
+; Growth Garden — Godot 4 project (SKELETON)
+; Mobile-web first. Real scenes/scripts are added under scenes/ and scripts/.
+; See CLAUDE.md for the package rules.
+
+config_version=5
+
+[application]
+
+config/name="Growth Garden"
+config/features=PackedStringArray("4.3", "GL Compatibility")
+run/main_scene="res://scenes/Main.tscn"
+
+[display]
+
+window/size/viewport_width=375
+window/size/viewport_height=667
+window/stretch/mode="canvas_items"
+window/handheld/orientation="portrait"
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"

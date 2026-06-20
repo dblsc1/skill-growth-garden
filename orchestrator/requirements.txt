@@ -1,0 +1,4 @@
+# Arbitrator runs on the HOST (it drives Docker + git push), not inside a container.
+langgraph>=0.2.0
+langgraph-checkpoint-sqlite>=2.0.0
+anthropic>=0.40.0

@@ -1,0 +1,43 @@
+# Dev services for integration + E2E testing.
+# Started by the arbitrator (integration node) or manually before launching a test engineer.
+# Test engineers reach these over the network — they NEVER mount source code.
+
+services:
+  mongo:
+    image: mongo:7
+    command: ["--wiredTigerCacheSizeGB", "0.25"]   # match ECS 2C2G budget
+    volumes:
+      - gg_mongo_data:/data/db
+    ports:
+      - "27017:27017"
+
+  backend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.backend
+    command: >
+      uv run uvicorn main:app --host 0.0.0.0 --port 8000 --workers 2
+    working_dir: /work/backend
+    volumes:
+      - ../backend:/work/backend
+    environment:
+      MONGO_URL: "mongodb://mongo:27017"
+      DEEPSEEK_API_KEY: "${DEEPSEEK_API_KEY:-}"
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mongo
+
+  web:
+    # Serves the exported Godot HTML5 build for Playwright E2E.
+    # The frontend worker exports to godot/build/web/ before this runs.
+    image: nginx:alpine
+    volumes:
+      - ../godot/build/web:/usr/share/nginx/html:ro
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+
+volumes:
+  gg_mongo_data:

@@ -1,0 +1,22 @@
+[project]
+name = "growth-garden-backend"
+version = "0.0.0"
+description = "Growth Garden FastAPI backend"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+    "motor>=3.6",            # async MongoDB driver
+    "pydantic>=2.9",
+    "pydantic-settings>=2.6",
+    "httpx>=0.27",           # DeepSeek/GPT calls
+]
+
+[dependency-groups]
+dev = ["ruff", "pytest", "pytest-asyncio"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
